@@ -1,46 +1,27 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html>
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="theme-color" content="#000000">
+    <meta name="viewport" content="width=410; user-scalable=no; minimal-ui">
+    <title>Online Chess Club</title>
     <link rel="stylesheet" href="lib/Chessboard-min.css">
-    <!--
-      manifest.json provides metadata used when your web app is added to the
-      homescreen on Android. See https://developers.google.com/web/fundamentals/engage-and-retain/web-app-manifest/
-    -->
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json">
-    <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.ico">
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
-
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
-    -->
-    <title>React App</title>
+    <link rel="stylesheet" href="lib/WinJS.4.0/css/ui-light.css" />
+    <link rel="stylesheet" href="default.css" />
   </head>
   <body>
-    <noscript>
-      You need to enable JavaScript to run this app.
-    </noscript>
-    <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
-
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
-
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
-    
-<!--- Begin Example HTML ------------------------------------------------------>
-<div id="myBoard" style="width: 400px"></div>
-Search depth:
+    <div class="page login" id='page-login'>
+      <div class='logo'></div>
+      <input id='username'></input>
+      <button id='login'>Login</button>
+    </div>
+    <div class="page lobby" id='page-lobby'>
+      <h1>Online Chess</h1>
+      <h2 id='userLabel'></h2>
+      <h3>Active games</h3>
+      <div id='gamesList'>
+        No active games
+        <!--- Begin Example HTML ------------------------------------------------------>
+        <div id="myBoard" style="width: 400px"></div>
+        Search depth:
         <select id="search-depth">
             <option value="1">1</option>
             <option value="2">2</option>
@@ -48,7 +29,7 @@ Search depth:
             <option value="4">4</option>
             <option value="5">5</option>
         </select>
-		<button id="switchBtn">on/off</button>
+		    <button id="switchBtn">on/off</button>
         <span id="switchState"></span>
         <br>
         <span>Positions evaluated: <span id="position-count"></span></span>
@@ -57,602 +38,614 @@ Search depth:
         <br>
         <span>Positions/s: <span id="positions-per-s"></span> </span>
         <br>
-<button id="startBtn">Start Position</button>
-<button id="clearBtn">Clear Board</button>
-<button id="flipOrientationBtn">Flip orientation</button>
-<button id="setUndoBtn">undo</button>
-<button id="destroyBtn">Destroy Board</button>
-<br/>
-<button id="setUpBoard">Set up board</button>
-<button id="startGame">Start game</button>
-<button id="setRuyLopezBtn">Spanish Opening</button>
-<br/>
-<button id="saveBoard">Save Game</button>
-<button id="loadBoard">Load Game</button>
-<br/>
-<label>Status:</label>
-<div id="status"></div>
-<!--
-<label>FEN:</label>
-<div id="fen"></div>
--->
-<label>Record:</label>
-<div id="pgn"></div>
-<label>Descriptive Notation:</label>
-<div id="descriptive"></div>
-<br/>
-<!--
-<div id="move-history" class="move-history"></div>
-->
-<!--- End Example HTML -------------------------------------------------------->
+        <button id="startBtn">Start Position</button>
+        <button id="clearBtn">Clear Board</button>
+        <button id="flipOrientationBtn">Flip orientation</button>
+        <button id="setUndoBtn">undo</button>
+        <button id="destroyBtn">Destroy Board</button>
+        <br/>
+        <button id="setUpBoard">Set up board</button>
+        <button id="startGame">Start game</button>
+        <button id="setRuyLopezBtn">Spanish Opening</button>
+        <br/>
+        <button id="saveBoard">Save Game</button>
+        <button id="loadBoard">Load Game</button>
+        <br/>
+        <label>Status:</label>
+        <div id="status"></div>
+        <!--
+        <label>FEN:</label>
+        <div id="fen"></div>
+        -->
+        <label>Record:</label>
+        <div id="pgn"></div>
+        <label>Descriptive Notation:</label>
+        <div id="descriptive"></div>
+        <br/>
+        <!--- End Example HTML -------------------------------------------------------->
+      </div>
+      <h3>Online players</h3>
+       <div id='userList'>
+         No users online
+      </div>
+    </div>
+    <div class="page game" id='page-game'>
+      <button id='game-back'>Back</button>
+      <button id='game-resign'>Resign</button>
+      <div id='game-board' style="width: 400px">
+      </div>
+    </div>
 
-<script src="lib/jquery-3.4.1.min.js"></script>
-<script src="lib/Chessboard-min.js"></script>
-<script src="lib/Chess.js"></script>
-<script type="text/javascript" src="lib/ostinato.js"></script>
-<script>
-// --- Begin Example JS --------------------------------------------------------
-var board = null
-var game = new Chess()
-var $status = $('#status')
-var $fen = $('#fen')
-var $pgn = $('#pgn')
-var whiteSquareGrey = '#a9a9a9'
-var blackSquareGrey = '#696969'
-var customFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
-var saveFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
-var savepgn = $('#pgn')
-var saveStatus = $('#status')
-var saveHistory = null
-var $descriptive = $('#descriptive')
-
-/* Play with other players
-function onDrop (source, target) {
-  // see if the move is legal
-  var move = game.move({
-    from: source,
-    to: target,
-    promotion: 'q' // NOTE: always promote to a queen for example simplicity
-  })
-
-  // illegal move
-  if (move === null) return 'snapback'
-
-  updateStatus()
-}
-*/
-// update the board position after the piece snap
-// for castling, en passant, pawn promotion
-function onSnapEnd () {
-  board.position(game.fen())
-}
-
-function updateStatus () {
-  var status = ''
-
-  var moveColor = 'White'
-  if (game.turn() === 'b') {
-    moveColor = 'Black'
-  }
-
-  // checkmate?
-  if (game.in_checkmate()) {
-    status = 'Game over, ' + moveColor + ' is in checkmate.'
-  }
-
-  // draw?
-  else if (game.in_draw()) {
-    status = 'Game over, drawn position'
-  }
-
-  // game still on
-  else {
-    status = moveColor + ' to move'
-
-    // check?
-    if (game.in_check()) {
-      status += ', ' + moveColor + ' is in check'
+    <script src="lib/socket.io-1.2.0.js"></script>
+    <script src="lib/WinJS.4.0/js/WinJS.min.js"></script>
+    <script src="default.js"></script>
+    <script src="lib/jquery-3.4.1.min.js"></script>
+    <script src="lib/Chessboard-min.js"></script>
+	  <script src="lib/Chess.js"></script>
+	  <script type="text/javascript" src="lib/ostinato.js"></script>
+    <script>
+    // --- Begin Example JS --------------------------------------------------------
+    var board = null
+    var game = new Chess()
+    var $status = $('#status')
+    var $fen = $('#fen')
+    var $pgn = $('#pgn')
+    var whiteSquareGrey = '#a9a9a9'
+    var blackSquareGrey = '#696969'
+    var customFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+    var saveFen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+    var savepgn = $('#pgn')
+    var saveStatus = $('#status')
+    var saveHistory = null
+    var $descriptive = $('#descriptive')
+    
+    /* Play with other players
+    function onDrop (source, target) {
+      // see if the move is legal
+      var move = game.move({
+        from: source,
+        to: target,
+        promotion: 'q' // NOTE: always promote to a queen for example simplicity
+      })
+    
+      // illegal move
+      if (move === null) return 'snapback'
+    
+      updateStatus()
     }
-  }
-  $status.html(status)
-  $fen.html(game.fen())
-  $pgn.html(game.pgn())
-  var result = ostinato.convertNotation(game.pgn(), "" + "Descriptive Notation", 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
-  fullAction = 1
-  halfAction = 0
-  currentAction = 0
-  actionsString = ''
-  /**
-  let Pcheck = /[^P]*[$-]/;
-  let Rcheck = /[^R]*[$-]/;
-  let Ncheck = /[^N]*[$-]/;
-  let Bcheck = /[^B]*[$-]/;
-  let Kcheck = /[^K]*[$-]/;
-  let Qcheck = /[^Q]*[$-]/;
-  */
-  let Ccheck = /^(.*?)-/;
-  let Kt = /Kt/gi;
-  
-  for (action in result.actions) {
-	if (halfAction == 0) {actionsString += fullAction + '. '}
-	halfAction++
-	let cur = result.actions[currentAction]
-	//if (result.validActionCount >= currentAction + 1) {
-	if (cur.includes("x")) {
-		cur = cur.replace(Kt, 'N')
-	    actionsString += cur + ' '
-	}
-	else {
-		cur = cur.replace(Kt, 'N')
-		if ((cur.charAt(0) == 'K' || cur.charAt(0) == 'Q')&&(cur.charAt(1) == 'P' || cur.charAt(1) == 'N' || cur.charAt(1) == 'B' || cur.charAt(1) == 'R')) {
-			actionsString += cur.charAt(1) + cur.replace(Ccheck, '-') + ' '
-		}
-		else {
-			actionsString += cur.charAt(0) + cur.replace(Ccheck, '-') + ' '
-		}
-	}
-	//}
-	//else {
-	//actionsString += ' ' + result.actions[currentAction].charAt(0) + result.actions[currentAction].replace(Ccheck, '-') + '  '
-	//}
-	currentAction++
-    if (halfAction == 2) {
-        halfAction = 0
-        fullAction++
-        actionsString += ' '
+    */
+    // update the board position after the piece snap
+    // for castling, en passant, pawn promotion
+    function onSnapEnd () {
+      board.position(game.fen())
     }
-  }
-  //console.log('actionsString: ')
-  //console.log(result.actions)
-  $descriptive.html(actionsString)
-}
-
-function onChange (oldPos, newPos) {
-  console.log('Position changed:')
-  console.log('Old position: ' + Chessboard.objToFen(oldPos))
-  console.log('New position: ' + Chessboard.objToFen(newPos))
-  console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-  customFen = Chessboard.objToFen(newPos)
-  //console.log(customFen)
-}
-
-var renderMoveHistory = function (moves) {
-  // movies => [object, object, objec, object]
-  var historyElement = $("#move-history").empty();
-  historyElement.empty();
-  for (var i = 0; i < moves.length; i = i + 2) {
-    historyElement.append(
-      /*       "<span>" +
-        moves[i] +
-        " " +
-        (moves[i + 1] ? moves[i + 1] : " ") +
-        "</span><br>" */
-      "<span>" +
-        "one round：" +
-        moves[i].from +
-        " ~ " +
-        moves[i].to +
-        (moves[i + 1]
-          ? " , " + moves[i + 1].from + " ~ " + moves[i + 1].to
-          : " ") +
-        "</span><br/>"
-    );
-  }
-  historyElement.scrollTop(historyElement[0].scrollHeight);
-};
-
-function removeGreySquares () {
-  $('#myBoard .square-55d63').css('background', '')
-}
-
-function greySquare (square) {
-  var $square = $('#myBoard .square-' + square)
-
-  var background = whiteSquareGrey
-  if ($square.hasClass('black-3c85d')) {
-    background = blackSquareGrey
-  }
-
-  $square.css('background', background)
-}
-
-function onMouseoverSquare (square, piece) {
-  // get list of possible moves for this square
-  var moves = game.moves({
-    square: square,
-    verbose: true
-  })
-
-  // exit if there are no moves available for this square
-  if (moves.length === 0) return
-
-  // highlight the square they moused over
-  greySquare(square)
-
-  // highlight the possible squares for this piece
-  for (var i = 0; i < moves.length; i++) {
-    greySquare(moves[i].to)
-  }
-}
-
-function onMouseoutSquare (square, piece) {
-  removeGreySquares()
-}
-
-// -------------- Begin of AI -----------------------
-var minimaxRoot = function (depth, game, isMaximisingPlayer) {
-  var newGameMoves = game.ugly_moves();
-  var bestMove = -9999;
-  var bestMoveFound;
-
-  for (var i = 0; i < newGameMoves.length; i++) {
-    var newGameMove = newGameMoves[i];
-    game.ugly_move(newGameMove);
-    var value = minimax(depth - 1, game, -10000, 10000, !isMaximisingPlayer);
-    game.undo();
-    if (value >= bestMove) {
-      bestMove = value;
-      bestMoveFound = newGameMove;
+    
+    function updateStatus () {
+      var status = ''
+    
+      var moveColor = 'White'
+      if (game.turn() === 'b') {
+        moveColor = 'Black'
+      }
+    
+      // checkmate?
+      if (game.in_checkmate()) {
+        status = 'Game over, ' + moveColor + ' is in checkmate.'
+      }
+    
+      // draw?
+      else if (game.in_draw()) {
+        status = 'Game over, drawn position'
+      }
+    
+      // game still on
+      else {
+        status = moveColor + ' to move'
+    
+        // check?
+        if (game.in_check()) {
+          status += ', ' + moveColor + ' is in check'
+        }
+      }
+      $status.html(status)
+      $fen.html(game.fen())
+      $pgn.html(game.pgn())
+      var result = ostinato.convertNotation(game.pgn(), "" + "Descriptive Notation", 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
+      fullAction = 1
+      halfAction = 0
+      currentAction = 0
+      actionsString = ''
+      /**
+      let Pcheck = /[^P]*[$-]/;
+      let Rcheck = /[^R]*[$-]/;
+      let Ncheck = /[^N]*[$-]/;
+      let Bcheck = /[^B]*[$-]/;
+      let Kcheck = /[^K]*[$-]/;
+      let Qcheck = /[^Q]*[$-]/;
+      */
+      let Ccheck = /^(.*?)-/;
+      let Kt = /Kt/gi;
+      
+      for (action in result.actions) {
+      if (halfAction == 0) {actionsString += fullAction + '. '}
+      halfAction++
+      let cur = result.actions[currentAction]
+      //if (result.validActionCount >= currentAction + 1) {
+      if (cur.includes("x")) {
+        cur = cur.replace(Kt, 'N')
+          actionsString += cur + ' '
+      }
+      else {
+        cur = cur.replace(Kt, 'N')
+        if ((cur.charAt(0) == 'K' || cur.charAt(0) == 'Q')&&(cur.charAt(1) == 'P' || cur.charAt(1) == 'N' || cur.charAt(1) == 'B' || cur.charAt(1) == 'R')) {
+          actionsString += cur.charAt(1) + cur.replace(Ccheck, '-') + ' '
+        }
+        else {
+          actionsString += cur.charAt(0) + cur.replace(Ccheck, '-') + ' '
+        }
+      }
+      //}
+      //else {
+      //actionsString += ' ' + result.actions[currentAction].charAt(0) + result.actions[currentAction].replace(Ccheck, '-') + '  '
+      //}
+      currentAction++
+        if (halfAction == 2) {
+            halfAction = 0
+            fullAction++
+            actionsString += ' '
+        }
+      }
+      //console.log('actionsString: ')
+      //console.log(result.actions)
+      $descriptive.html(actionsString)
     }
-  }
-  return bestMoveFound;
-};
-
-var minimax = function (depth, game, alpha, beta, isMaximisingPlayer) {
-  positionCount++;
-  if (depth === 0) {
-    return -evaluateBoard(game.board());
-  }
-
-  var newGameMoves = game.ugly_moves();
-
-  if (isMaximisingPlayer) {
-    var bestMove = -9999;
-    for (var i = 0; i < newGameMoves.length; i++) {
-      game.ugly_move(newGameMoves[i]);
-      bestMove = Math.max(
-        bestMove,
-        minimax(depth - 1, game, alpha, beta, !isMaximisingPlayer)
-      );
-      game.undo();
-      alpha = Math.max(alpha, bestMove);
-      if (beta <= alpha) {
-        return bestMove;
+    
+    function onChange (oldPos, newPos) {
+      console.log('Position changed:')
+      console.log('Old position: ' + Chessboard.objToFen(oldPos))
+      console.log('New position: ' + Chessboard.objToFen(newPos))
+      console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+      customFen = Chessboard.objToFen(newPos)
+      //console.log(customFen)
+    }
+    
+    var renderMoveHistory = function (moves) {
+      // movies => [object, object, objec, object]
+      var historyElement = $("#move-history").empty();
+      historyElement.empty();
+      for (var i = 0; i < moves.length; i = i + 2) {
+        historyElement.append(
+          /*       "<span>" +
+            moves[i] +
+            " " +
+            (moves[i + 1] ? moves[i + 1] : " ") +
+            "</span><br>" */
+          "<span>" +
+            "one round：" +
+            moves[i].from +
+            " ~ " +
+            moves[i].to +
+            (moves[i + 1]
+              ? " , " + moves[i + 1].from + " ~ " + moves[i + 1].to
+              : " ") +
+            "</span><br/>"
+        );
+      }
+      historyElement.scrollTop(historyElement[0].scrollHeight);
+    };
+    
+    function removeGreySquares () {
+      $('#myBoard .square-55d63').css('background', '')
+    }
+    
+    function greySquare (square) {
+      var $square = $('#myBoard .square-' + square)
+    
+      var background = whiteSquareGrey
+      if ($square.hasClass('black-3c85d')) {
+        background = blackSquareGrey
+      }
+    
+      $square.css('background', background)
+    }
+    
+    function onMouseoverSquare (square, piece) {
+      // get list of possible moves for this square
+      var moves = game.moves({
+        square: square,
+        verbose: true
+      })
+    
+      // exit if there are no moves available for this square
+      if (moves.length === 0) return
+    
+      // highlight the square they moused over
+      greySquare(square)
+    
+      // highlight the possible squares for this piece
+      for (var i = 0; i < moves.length; i++) {
+        greySquare(moves[i].to)
       }
     }
-    return bestMove;
-  } else {
-    var bestMove = 9999;
-    for (var i = 0; i < newGameMoves.length; i++) {
-      game.ugly_move(newGameMoves[i]);
-      bestMove = Math.min(
-        bestMove,
-        minimax(depth - 1, game, alpha, beta, !isMaximisingPlayer)
-      );
-      game.undo();
-      beta = Math.min(beta, bestMove);
-      if (beta <= alpha) {
+    
+    function onMouseoutSquare (square, piece) {
+      removeGreySquares()
+    }
+    
+    // -------------- Begin of AI -----------------------
+    var minimaxRoot = function (depth, game, isMaximisingPlayer) {
+      var newGameMoves = game.ugly_moves();
+      var bestMove = -9999;
+      var bestMoveFound;
+    
+      for (var i = 0; i < newGameMoves.length; i++) {
+        var newGameMove = newGameMoves[i];
+        game.ugly_move(newGameMove);
+        var value = minimax(depth - 1, game, -10000, 10000, !isMaximisingPlayer);
+        game.undo();
+        if (value >= bestMove) {
+          bestMove = value;
+          bestMoveFound = newGameMove;
+        }
+      }
+      return bestMoveFound;
+    };
+    
+    var minimax = function (depth, game, alpha, beta, isMaximisingPlayer) {
+      positionCount++;
+      if (depth === 0) {
+        return -evaluateBoard(game.board());
+      }
+    
+      var newGameMoves = game.ugly_moves();
+    
+      if (isMaximisingPlayer) {
+        var bestMove = -9999;
+        for (var i = 0; i < newGameMoves.length; i++) {
+          game.ugly_move(newGameMoves[i]);
+          bestMove = Math.max(
+            bestMove,
+            minimax(depth - 1, game, alpha, beta, !isMaximisingPlayer)
+          );
+          game.undo();
+          alpha = Math.max(alpha, bestMove);
+          if (beta <= alpha) {
+            return bestMove;
+          }
+        }
+        return bestMove;
+      } else {
+        var bestMove = 9999;
+        for (var i = 0; i < newGameMoves.length; i++) {
+          game.ugly_move(newGameMoves[i]);
+          bestMove = Math.min(
+            bestMove,
+            minimax(depth - 1, game, alpha, beta, !isMaximisingPlayer)
+          );
+          game.undo();
+          beta = Math.min(beta, bestMove);
+          if (beta <= alpha) {
+            return bestMove;
+          }
+        }
         return bestMove;
       }
+    };
+    
+    var evaluateBoard = function (board) {
+      var totalEvaluation = 0;
+      for (var i = 0; i < 8; i++) {
+        for (var j = 0; j < 8; j++) {
+          totalEvaluation = totalEvaluation + getPieceValue(board[i][j], i, j);
+        }
+      }
+      return totalEvaluation;
+    };
+    
+    var reverseArray = function (array) {
+      return array.slice().reverse();
+    };
+    
+    var pawnEvalWhite = [
+      [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      [5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0],
+      [1.0, 1.0, 2.0, 3.0, 3.0, 2.0, 1.0, 1.0],
+      [0.5, 0.5, 1.0, 2.5, 2.5, 1.0, 0.5, 0.5],
+      [0.0, 0.0, 0.0, 2.0, 2.0, 0.0, 0.0, 0.0],
+      [0.5, -0.5, -1.0, 0.0, 0.0, -1.0, -0.5, 0.5],
+      [0.5, 1.0, 1.0, -2.0, -2.0, 1.0, 1.0, 0.5],
+      [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+    ];
+    
+    var pawnEvalBlack = reverseArray(pawnEvalWhite);
+    
+    var knightEval = [
+      [-5.0, -4.0, -3.0, -3.0, -3.0, -3.0, -4.0, -5.0],
+      [-4.0, -2.0, 0.0, 0.0, 0.0, 0.0, -2.0, -4.0],
+      [-3.0, 0.0, 1.0, 1.5, 1.5, 1.0, 0.0, -3.0],
+      [-3.0, 0.5, 1.5, 2.0, 2.0, 1.5, 0.5, -3.0],
+      [-3.0, 0.0, 1.5, 2.0, 2.0, 1.5, 0.0, -3.0],
+      [-3.0, 0.5, 1.0, 1.5, 1.5, 1.0, 0.5, -3.0],
+      [-4.0, -2.0, 0.0, 0.5, 0.5, 0.0, -2.0, -4.0],
+      [-5.0, -4.0, -3.0, -3.0, -3.0, -3.0, -4.0, -5.0],
+    ];
+    
+    var bishopEvalWhite = [
+      [-2.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -2.0],
+      [-1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0],
+      [-1.0, 0.0, 0.5, 1.0, 1.0, 0.5, 0.0, -1.0],
+      [-1.0, 0.5, 0.5, 1.0, 1.0, 0.5, 0.5, -1.0],
+      [-1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, -1.0],
+      [-1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -1.0],
+      [-1.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.5, -1.0],
+      [-2.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -2.0],
+    ];
+    
+    var bishopEvalBlack = reverseArray(bishopEvalWhite);
+    
+    var rookEvalWhite = [
+      [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      [0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.5],
+      [-0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.5],
+      [-0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.5],
+      [-0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.5],
+      [-0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.5],
+      [-0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.5],
+      [0.0, 0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 0.0],
+    ];
+    
+    var rookEvalBlack = reverseArray(rookEvalWhite);
+    
+    var evalQueen = [
+      [-2.0, -1.0, -1.0, -0.5, -0.5, -1.0, -1.0, -2.0],
+      [-1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0],
+      [-1.0, 0.0, 0.5, 0.5, 0.5, 0.5, 0.0, -1.0],
+      [-0.5, 0.0, 0.5, 0.5, 0.5, 0.5, 0.0, -0.5],
+      [0.0, 0.0, 0.5, 0.5, 0.5, 0.5, 0.0, -0.5],
+      [-1.0, 0.5, 0.5, 0.5, 0.5, 0.5, 0.0, -1.0],
+      [-1.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, -1.0],
+      [-2.0, -1.0, -1.0, -0.5, -0.5, -1.0, -1.0, -2.0],
+    ];
+    
+    var kingEvalWhite = [
+      [-3.0, -4.0, -4.0, -5.0, -5.0, -4.0, -4.0, -3.0],
+      [-3.0, -4.0, -4.0, -5.0, -5.0, -4.0, -4.0, -3.0],
+      [-3.0, -4.0, -4.0, -5.0, -5.0, -4.0, -4.0, -3.0],
+      [-3.0, -4.0, -4.0, -5.0, -5.0, -4.0, -4.0, -3.0],
+      [-2.0, -3.0, -3.0, -4.0, -4.0, -3.0, -3.0, -2.0],
+      [-1.0, -2.0, -2.0, -2.0, -2.0, -2.0, -2.0, -1.0],
+      [2.0, 2.0, 0.0, 0.0, 0.0, 0.0, 2.0, 2.0],
+      [2.0, 3.0, 1.0, 0.0, 0.0, 1.0, 3.0, 2.0],
+    ];
+    
+    var kingEvalBlack = reverseArray(kingEvalWhite);
+    
+    var getPieceValue = function (piece, x, y) {
+      if (piece === null) {
+        return 0;
+      }
+      var getAbsoluteValue = function (piece, isWhite, x, y) {
+        if (piece.type === "p") {
+          return 10 + (isWhite ? pawnEvalWhite[y][x] : pawnEvalBlack[y][x]);
+        } else if (piece.type === "r") {
+          return 50 + (isWhite ? rookEvalWhite[y][x] : rookEvalBlack[y][x]);
+        } else if (piece.type === "n") {
+          return 30 + knightEval[y][x];
+        } else if (piece.type === "b") {
+          return 30 + (isWhite ? bishopEvalWhite[y][x] : bishopEvalBlack[y][x]);
+        } else if (piece.type === "q") {
+          return 90 + evalQueen[y][x];
+        } else if (piece.type === "k") {
+          return 900 + (isWhite ? kingEvalWhite[y][x] : kingEvalBlack[y][x]);
+        }
+        throw "Unknown piece type: " + piece.type;
+      };
+    
+      var absoluteValue = getAbsoluteValue(piece, piece.color === "w", x, y);
+      return piece.color === "w" ? absoluteValue : -absoluteValue;
+    };
+    
+    /* board visualization and games state handling */
+    var state = false;
+    /*
+    var onDragStart = function (source, piece, position, orientation) {
+      if (
+        game.in_checkmate() === true ||
+        game.in_draw() === true ||
+        piece.search(/^b/) !== -1
+      ) {
+        return false;
+      }
+    };
+    */
+    function onDragStart (source, piece, position, orientation) {
+      // do not pick up pieces if the game is over
+      if (game.game_over()) return false
+    
+      // only pick up pieces for the side to move
+      if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
+          (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
+        return false
+      }
     }
-    return bestMove;
-  }
-};
-
-var evaluateBoard = function (board) {
-  var totalEvaluation = 0;
-  for (var i = 0; i < 8; i++) {
-    for (var j = 0; j < 8; j++) {
-      totalEvaluation = totalEvaluation + getPieceValue(board[i][j], i, j);
+    
+    var onDrop = function (source, target) {
+      console.log(source, target);
+      var move = game.move({
+        from: source,
+        to: target,
+        promotion: "q",
+      });
+    
+      removeGreySquares();
+      if (move === null) {
+        return "snapback";
+      }
+    
+      //renderMoveHistory(game.history({ verbose: true }));
+      updateStatus()
+      if (state) {
+      window.setTimeout(makeBestMove, 250);
+      }
+    };
+    
+    /* Test Random Computer
+    function makeRandomMove () {
+      var possibleMoves = game.moves()
+    
+      // game over
+      if (possibleMoves.length === 0) return
+    
+      var randomIdx = Math.floor(Math.random() * possibleMoves.length)
+      game.move(possibleMoves[randomIdx])
+      board.position(game.fen())
     }
-  }
-  return totalEvaluation;
-};
-
-var reverseArray = function (array) {
-  return array.slice().reverse();
-};
-
-var pawnEvalWhite = [
-  [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-  [5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0],
-  [1.0, 1.0, 2.0, 3.0, 3.0, 2.0, 1.0, 1.0],
-  [0.5, 0.5, 1.0, 2.5, 2.5, 1.0, 0.5, 0.5],
-  [0.0, 0.0, 0.0, 2.0, 2.0, 0.0, 0.0, 0.0],
-  [0.5, -0.5, -1.0, 0.0, 0.0, -1.0, -0.5, 0.5],
-  [0.5, 1.0, 1.0, -2.0, -2.0, 1.0, 1.0, 0.5],
-  [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-];
-
-var pawnEvalBlack = reverseArray(pawnEvalWhite);
-
-var knightEval = [
-  [-5.0, -4.0, -3.0, -3.0, -3.0, -3.0, -4.0, -5.0],
-  [-4.0, -2.0, 0.0, 0.0, 0.0, 0.0, -2.0, -4.0],
-  [-3.0, 0.0, 1.0, 1.5, 1.5, 1.0, 0.0, -3.0],
-  [-3.0, 0.5, 1.5, 2.0, 2.0, 1.5, 0.5, -3.0],
-  [-3.0, 0.0, 1.5, 2.0, 2.0, 1.5, 0.0, -3.0],
-  [-3.0, 0.5, 1.0, 1.5, 1.5, 1.0, 0.5, -3.0],
-  [-4.0, -2.0, 0.0, 0.5, 0.5, 0.0, -2.0, -4.0],
-  [-5.0, -4.0, -3.0, -3.0, -3.0, -3.0, -4.0, -5.0],
-];
-
-var bishopEvalWhite = [
-  [-2.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -2.0],
-  [-1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0],
-  [-1.0, 0.0, 0.5, 1.0, 1.0, 0.5, 0.0, -1.0],
-  [-1.0, 0.5, 0.5, 1.0, 1.0, 0.5, 0.5, -1.0],
-  [-1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, -1.0],
-  [-1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, -1.0],
-  [-1.0, 0.5, 0.0, 0.0, 0.0, 0.0, 0.5, -1.0],
-  [-2.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -2.0],
-];
-
-var bishopEvalBlack = reverseArray(bishopEvalWhite);
-
-var rookEvalWhite = [
-  [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-  [0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.5],
-  [-0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.5],
-  [-0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.5],
-  [-0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.5],
-  [-0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.5],
-  [-0.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.5],
-  [0.0, 0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 0.0],
-];
-
-var rookEvalBlack = reverseArray(rookEvalWhite);
-
-var evalQueen = [
-  [-2.0, -1.0, -1.0, -0.5, -0.5, -1.0, -1.0, -2.0],
-  [-1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0],
-  [-1.0, 0.0, 0.5, 0.5, 0.5, 0.5, 0.0, -1.0],
-  [-0.5, 0.0, 0.5, 0.5, 0.5, 0.5, 0.0, -0.5],
-  [0.0, 0.0, 0.5, 0.5, 0.5, 0.5, 0.0, -0.5],
-  [-1.0, 0.5, 0.5, 0.5, 0.5, 0.5, 0.0, -1.0],
-  [-1.0, 0.0, 0.5, 0.0, 0.0, 0.0, 0.0, -1.0],
-  [-2.0, -1.0, -1.0, -0.5, -0.5, -1.0, -1.0, -2.0],
-];
-
-var kingEvalWhite = [
-  [-3.0, -4.0, -4.0, -5.0, -5.0, -4.0, -4.0, -3.0],
-  [-3.0, -4.0, -4.0, -5.0, -5.0, -4.0, -4.0, -3.0],
-  [-3.0, -4.0, -4.0, -5.0, -5.0, -4.0, -4.0, -3.0],
-  [-3.0, -4.0, -4.0, -5.0, -5.0, -4.0, -4.0, -3.0],
-  [-2.0, -3.0, -3.0, -4.0, -4.0, -3.0, -3.0, -2.0],
-  [-1.0, -2.0, -2.0, -2.0, -2.0, -2.0, -2.0, -1.0],
-  [2.0, 2.0, 0.0, 0.0, 0.0, 0.0, 2.0, 2.0],
-  [2.0, 3.0, 1.0, 0.0, 0.0, 1.0, 3.0, 2.0],
-];
-
-var kingEvalBlack = reverseArray(kingEvalWhite);
-
-var getPieceValue = function (piece, x, y) {
-  if (piece === null) {
-    return 0;
-  }
-  var getAbsoluteValue = function (piece, isWhite, x, y) {
-    if (piece.type === "p") {
-      return 10 + (isWhite ? pawnEvalWhite[y][x] : pawnEvalBlack[y][x]);
-    } else if (piece.type === "r") {
-      return 50 + (isWhite ? rookEvalWhite[y][x] : rookEvalBlack[y][x]);
-    } else if (piece.type === "n") {
-      return 30 + knightEval[y][x];
-    } else if (piece.type === "b") {
-      return 30 + (isWhite ? bishopEvalWhite[y][x] : bishopEvalBlack[y][x]);
-    } else if (piece.type === "q") {
-      return 90 + evalQueen[y][x];
-    } else if (piece.type === "k") {
-      return 900 + (isWhite ? kingEvalWhite[y][x] : kingEvalBlack[y][x]);
+    */
+    
+    var makeBestMove = function () {
+      var bestMove = getBestMove(game);
+      game.ugly_move(bestMove);
+      board.position(game.fen());
+      //renderMoveHistory(game.history({ verbose: true }));
+      updateStatus()
+      if (game.game_over()) {
+        alert("Game over");
+      }
+    };
+    
+    var positionCount;
+    var getBestMove = function (game) {
+      if (game.game_over()) {
+        alert("Game over");
+      }
+    
+      positionCount = 0;
+      var depth = parseInt($("#search-depth").find(":selected").text());
+    
+      var d = new Date().getTime();
+      var bestMove = minimaxRoot(depth, game, true);
+      var d2 = new Date().getTime();
+      var moveTime = d2 - d;
+      var positionsPerS = (positionCount * 1000) / moveTime;
+    
+      $("#position-count").text(positionCount);
+      $("#time").text(moveTime / 1000 + "s");
+      $("#positions-per-s").text(positionsPerS);
+      return bestMove;
+    };
+    // -------------- End of AI -------------------------
+    
+    var config = {
+      draggable: true,
+      //dropOffBoard: 'trash',
+      //sparePieces: true,
+      position: 'start',
+      onChange: onChange,
+      onDragStart: onDragStart,
+      onDrop: onDrop,
+      onMouseoutSquare: onMouseoutSquare,
+      onMouseoverSquare: onMouseoverSquare,
+      onSnapEnd: onSnapEnd
     }
-    throw "Unknown piece type: " + piece.type;
-  };
-
-  var absoluteValue = getAbsoluteValue(piece, piece.color === "w", x, y);
-  return piece.color === "w" ? absoluteValue : -absoluteValue;
-};
-
-/* board visualization and games state handling */
-var state = false;
-/*
-var onDragStart = function (source, piece, position, orientation) {
-  if (
-    game.in_checkmate() === true ||
-    game.in_draw() === true ||
-    piece.search(/^b/) !== -1
-  ) {
-    return false;
-  }
-};
-*/
-function onDragStart (source, piece, position, orientation) {
-  // do not pick up pieces if the game is over
-  if (game.game_over()) return false
-
-  // only pick up pieces for the side to move
-  if ((game.turn() === 'w' && piece.search(/^b/) !== -1) ||
-      (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
-    return false
-  }
-}
-
-var onDrop = function (source, target) {
-  console.log(source, target);
-  var move = game.move({
-    from: source,
-    to: target,
-    promotion: "q",
-  });
-
-  removeGreySquares();
-  if (move === null) {
-    return "snapback";
-  }
-
-  //renderMoveHistory(game.history({ verbose: true }));
-  updateStatus()
-  if (state) {
-  window.setTimeout(makeBestMove, 250);
-  }
-};
-
-/* Test Random Computer
-function makeRandomMove () {
-  var possibleMoves = game.moves()
-
-  // game over
-  if (possibleMoves.length === 0) return
-
-  var randomIdx = Math.floor(Math.random() * possibleMoves.length)
-  game.move(possibleMoves[randomIdx])
-  board.position(game.fen())
-}
-*/
-
-var makeBestMove = function () {
-  var bestMove = getBestMove(game);
-  game.ugly_move(bestMove);
-  board.position(game.fen());
-  //renderMoveHistory(game.history({ verbose: true }));
-  updateStatus()
-  if (game.game_over()) {
-    alert("Game over");
-  }
-};
-
-var positionCount;
-var getBestMove = function (game) {
-  if (game.game_over()) {
-    alert("Game over");
-  }
-
-  positionCount = 0;
-  var depth = parseInt($("#search-depth").find(":selected").text());
-
-  var d = new Date().getTime();
-  var bestMove = minimaxRoot(depth, game, true);
-  var d2 = new Date().getTime();
-  var moveTime = d2 - d;
-  var positionsPerS = (positionCount * 1000) / moveTime;
-
-  $("#position-count").text(positionCount);
-  $("#time").text(moveTime / 1000 + "s");
-  $("#positions-per-s").text(positionsPerS);
-  return bestMove;
-};
-// -------------- End of AI -------------------------
-
-var config = {
-  draggable: true,
-  //dropOffBoard: 'trash',
-  //sparePieces: true,
-  position: 'start',
-  onChange: onChange,
-  onDragStart: onDragStart,
-  onDrop: onDrop,
-  onMouseoutSquare: onMouseoutSquare,
-  onMouseoverSquare: onMouseoverSquare,
-  onSnapEnd: onSnapEnd
-}
-
-board = Chessboard('myBoard', config)
-
-$('#startBtn').on('click', function () {
-  board = Chessboard('myBoard', config)
-  board.start()
-  game = new Chess()
-  $status.html(status)
-  $fen.html(game.fen())
-  $pgn.html(game.pgn())
-  $descriptive.html('Descriptive Notation')
-})
-
-$('#clearBtn').on('click', function () {
-  board = Chessboard('myBoard', config)
-  board.clear()
-})
-
-$('#flipOrientationBtn').on('click', function () {
-  board.flip()
-  if (state) {
-  window.setTimeout(makeBestMove, 250);
-  }
-})
-
-$('#setRuyLopezBtn').on('click', function () {
-  board = Chessboard('myBoard', config)
-  var ruyLopez = 'r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 3 3'
-  game = new Chess(ruyLopez)
-  board.position(ruyLopez)
-  $status.html(status)
-  $fen.html(game.fen())
-  $pgn.html(game.pgn())
-  $descriptive.html('Descriptive Notation')
-  window.setTimeout(makeBestMove, 250);
-})
-
-$("#setUndoBtn").on("click", () => {
-  var result = game.undo();
-  console.log(result);
-  if (result) {
-    board.position(game.fen());
-    result = game.undo();
-    board.position(game.fen());
-    //renderMoveHistory(game.history({ verbose: true }));
-  }
-});
-document.getElementById("switchState").innerText = state;
-$("#switchBtn").on("click", () => {
-  state = !state;
-  document.getElementById("switchState").innerText = state;
-});
-$('#destroyBtn').on('click', board.destroy)
-
-var cfg = {
-  draggable: true,
-  dropOffBoard: 'trash',
-  sparePieces: true,
-  onChange: onChange
-}
-
-$('#setUpBoard').on('click', function () {
-  board = Chessboard('myBoard', cfg)
-})
-
-$('#startGame').on('click', function () {
-  customFen = customFen + ' w KQkq - 0 1'
-  board = Chessboard('myBoard', config)
-  game = new Chess(customFen)
-  board.position(customFen)
-  $status.html(status)
-  $fen.html(game.fen())
-  $pgn.html(game.pgn())
-  $descriptive.html('Descriptive Notation')
-})
-
-$('#saveBoard').on('click', function () {
-  console.log('Save game:')
-  saveFen = game.fen()
-  console.log('FEN: ' + saveFen)
-  savepgn = game.pgn()
-  console.log('PGN: ' + savepgn)
-  saveHistory = game.history({ verbose: true })
-  console.log('History: ' + saveHistory)
-  console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-})
-
-$('#loadBoard').on('click', function () {
-  board = Chessboard('myBoard', config)
-  game = new Chess()
-  game.load_pgn([savepgn].join('\n'))
-  board.position(game.fen())
-  $status.html(status)
-  $fen.html(game.fen())
-  $pgn.html(game.pgn())
-  $descriptive.html('Descriptive Notation')
-})
-updateStatus()
-// --- End Example JS ----------------------------------------------------------
-</script>
+    
+    board = Chessboard('myBoard', config)
+    
+    $('#startBtn').on('click', function () {
+      board = Chessboard('myBoard', config)
+      board.start()
+      game = new Chess()
+      $status.html(status)
+      $fen.html(game.fen())
+      $pgn.html(game.pgn())
+      $descriptive.html('Descriptive Notation')
+    })
+    
+    $('#clearBtn').on('click', function () {
+      board = Chessboard('myBoard', config)
+      board.clear()
+    })
+    
+    $('#flipOrientationBtn').on('click', function () {
+      board.flip()
+      if (state) {
+      window.setTimeout(makeBestMove, 250);
+      }
+    })
+    
+    $('#setRuyLopezBtn').on('click', function () {
+      board = Chessboard('myBoard', config)
+      var ruyLopez = 'r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 3 3'
+      game = new Chess(ruyLopez)
+      board.position(ruyLopez)
+      $status.html(status)
+      $fen.html(game.fen())
+      $pgn.html(game.pgn())
+      $descriptive.html('Descriptive Notation')
+      window.setTimeout(makeBestMove, 250);
+    })
+    
+    $("#setUndoBtn").on("click", () => {
+      var result = game.undo();
+      console.log(result);
+      if (result) {
+        board.position(game.fen());
+        result = game.undo();
+        board.position(game.fen());
+        //renderMoveHistory(game.history({ verbose: true }));
+      }
+    });
+    document.getElementById("switchState").innerText = state;
+    $("#switchBtn").on("click", () => {
+      state = !state;
+      document.getElementById("switchState").innerText = state;
+    });
+    $('#destroyBtn').on('click', board.destroy)
+    
+    var cfg = {
+      draggable: true,
+      dropOffBoard: 'trash',
+      sparePieces: true,
+      onChange: onChange
+    }
+    
+    $('#setUpBoard').on('click', function () {
+      board = Chessboard('myBoard', cfg)
+    })
+    
+    $('#startGame').on('click', function () {
+      customFen = customFen + ' w KQkq - 0 1'
+      board = Chessboard('myBoard', config)
+      game = new Chess(customFen)
+      board.position(customFen)
+      $status.html(status)
+      $fen.html(game.fen())
+      $pgn.html(game.pgn())
+      $descriptive.html('Descriptive Notation')
+    })
+    
+    $('#saveBoard').on('click', function () {
+      console.log('Save game:')
+      saveFen = game.fen()
+      console.log('FEN: ' + saveFen)
+      savepgn = game.pgn()
+      console.log('PGN: ' + savepgn)
+      saveHistory = game.history({ verbose: true })
+      console.log('History: ' + saveHistory)
+      console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+    })
+    
+    $('#loadBoard').on('click', function () {
+      board = Chessboard('myBoard', config)
+      game = new Chess()
+      game.load_pgn([savepgn].join('\n'))
+      board.position(game.fen())
+      $status.html(status)
+      $fen.html(game.fen())
+      $pgn.html(game.pgn())
+      $descriptive.html('Descriptive Notation')
+    })
+    updateStatus()
+    // --- End Example JS ----------------------------------------------------------
+    </script>
   </body>
 </html>
